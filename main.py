@@ -1,7 +1,6 @@
 import discord, config, requests, datetime, wikipedia, pymysql;
-from discord import flags;
+from discord import flags, utils;
 from discord.ext import commands;
-from discord import utils;
 from bs4 import BeautifulSoup;
 
 bot = commands.Bot(command_prefix='~', intents = discord.Intents.all(), help_command=None);
@@ -97,6 +96,18 @@ async def on_command_error(ctx, error):
     er = str(error);
     if er == 'arg is a required argument that is missing.':
         emb = discord.Embed(title=f'Мне нужен его логин, тысяча чертей!', value='\u200b', color=0xff0000);
+        emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url);
+        emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
+        await bot.get_channel(config.CHANNEL).send(embed = emb);
+        return;
+    if er == 'member is a required argument that is missing.':
+        emb = discord.Embed(title=f'Мне нужен логин человека для досье, тысяча чертей!', value='\u200b', color=0xff0000);
+        emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url);
+        emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
+        await bot.get_channel(config.CHANNEL).send(embed = emb);
+        return;
+    if er == 'Command "usd" is not found':
+        emb = discord.Embed(title=f'Такой команды нет, используй ~help', value='\u200b', color=0xff0000);
         emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url);
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
         await bot.get_channel(config.CHANNEL).send(embed = emb);
