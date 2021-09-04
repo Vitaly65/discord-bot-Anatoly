@@ -9,34 +9,22 @@ import pymysql;
 import datetime;
 import wikipedia;
 
-#парсинг
-#интеграция с wiki
-
 bot = commands.Bot(command_prefix='~', intents = discord.Intents.all(), help_command=None);
 
 @bot.event
 async def on_ready():
     try:
         global creator;
+        global date;
+        global yesterday;
         creator = await bot.fetch_user(318720256795344896);
+        date = datetime.datetime.today();
+        yesterday = datetime.datetime.today() - datetime.timedelta(days = 1);
         print(f'We have logged as {bot.user}');
         config.botstatus = '✅';
         wikipedia.set_lang("ru");
-        global date;
-        global yesterday;
-        date = datetime.datetime.today();
-        yesterday = datetime.datetime.today() - datetime.timedelta(days = 1);
         try:
-            global connection;
-            connection = pymysql.connect(
-                host=config.host,
-                port=config.port,
-                user=config.user,
-                password=config.password,
-                database=config.db_name,
-                charset='utf8',
-                cursorclass=pymysql.cursors.DictCursor
-            );
+            connection = await connectsql();
             config.sqlstatus = '✅';
         except:
             print('SQL error');
@@ -46,15 +34,7 @@ async def on_ready():
 @bot.event
 async def on_member_join(member):
     try:
-        connection = pymysql.connect(
-                host=config.host,
-                port=config.port,
-                user=config.user,
-                password=config.password,
-                database=config.db_name,
-                charset=config.charset,
-                cursorclass=pymysql.cursors.DictCursor
-            );
+        connection = await connectsql();
         user = str(member.name) + '#' + str(member.discriminator);
         role = utils.get(member.guild.roles, id=config.ROLE);
         emb = discord.Embed(title=f"У нас новый гражданский! {user}", value='\u200b', color=0x008000);
@@ -138,15 +118,7 @@ async def on_raw_reaction_add(payload):
 @bot.command(pass_context= True)
 async def blackhole(ctx):
     try:
-        connection = pymysql.connect(
-                host=config.host,
-                port=config.port,
-                user=config.user,
-                password=config.password,
-                database=config.db_name,
-                charset=config.charset,
-                cursorclass=pymysql.cursors.DictCursor
-            );
+        connection = await connectsql();
         with connection:
             cur = connection.cursor();
             insert_query = "SELECT * FROM blacklist";
@@ -193,15 +165,7 @@ async def status(ctx):
 @bot.command(pass_context= True)
 async def addtoblackhole(ctx, *, arg):
     try:
-        connection = pymysql.connect(
-                host=config.host,
-                port=config.port,
-                user=config.user,
-                password=config.password,
-                database=config.db_name,
-                charset=config.charset,
-                cursorclass=pymysql.cursors.DictCursor
-            );
+        connection = await connectsql();
         with connection.cursor() as cursor:
             cur = connection.cursor();
             insert_query = "SELECT * FROM blacklist";
@@ -232,15 +196,7 @@ async def addtoblackhole(ctx, *, arg):
 
 @bot.command(pass_context= True)
 async def deletefromblackhole(ctx, *, arg):
-    connection = pymysql.connect(
-                host=config.host,
-                port=config.port,
-                user=config.user,
-                password=config.password,
-                database=config.db_name,
-                charset=config.charset,
-                cursorclass=pymysql.cursors.DictCursor
-            );
+    connection = await connectsql();
     try:
          with connection.cursor() as cursor:
             insert_query = f"SELECT * FROM blacklist";
@@ -354,13 +310,7 @@ async def search(ctx, *, arg):
 @bot.command(pass_context= True)
 async def USD(ctx):
     try:
-        url = 'https://cbr.ru/';
-        response = requests.get(url);
-        soup = BeautifulSoup(response.text, 'lxml');
-        quotes = soup.find_all('div', class_='col-xs-9');
-        text = [];
-        for quote in quotes:
-            text.append(quote.text);
+        text = await parser_cbr();
         emb = discord.Embed(title='Курс доллара(by cbr.ru):', value='\u200b', color=0x008000);
         emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url);
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
@@ -377,13 +327,7 @@ async def USD(ctx):
 @bot.command(pass_context= True)
 async def EUR(ctx):
     try:
-        url = 'https://cbr.ru/';
-        response = requests.get(url);
-        soup = BeautifulSoup(response.text, 'lxml');
-        quotes = soup.find_all('div', class_='col-xs-9');
-        text = [];
-        for quote in quotes:
-            text.append(quote.text);
+        text = await parser_cbr();
         emb = discord.Embed(title='Курс евро(by cbr.ru):', value='\u200b', color=0x008000);
         emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url);
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
@@ -396,5 +340,28 @@ async def EUR(ctx):
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
         emb.add_field(name=f"cbr.ru не отвечает", value='\u200b', inline=False);
         await ctx.channel.send(embed = emb);
+
+async def parser_cbr():
+    url = 'https://cbr.ru/';
+    response = requests.get(url);
+    soup = BeautifulSoup(response.text, 'lxml');
+    quotes = soup.find_all('div', class_='col-xs-9');
+    text = [];
+    for quote in quotes:
+        text.append(quote.text);
+    print(text);
+    return text;
+
+async def connectsql():
+    connection = pymysql.connect(
+                host=config.host,
+                port=config.port,
+                user=config.user,
+                password=config.password,
+                database=config.db_name,
+                charset=config.charset,
+                cursorclass=pymysql.cursors.DictCursor
+            );
+    return connection;
 
 bot.run(config.TOKEN);
