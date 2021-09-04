@@ -10,9 +10,3 @@ password = 'nDQtaDIatU';
 db_name = 'sql11434537';
 port = 3306;
 charset='utf8';
-
-#Server: sql11.freemysqlhosting.net
-#Name: sql11434537
-#Username: sql11434537
-#Password: nDQtaDIatU
-#Port number: 3306
