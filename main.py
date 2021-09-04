@@ -8,6 +8,10 @@ from bs4 import BeautifulSoup as BS;
 import pymysql;
 import datetime
 
+#парсинг
+#интеграция с wiki
+#сделать что-то с 'connection'
+
 bot = commands.Bot(command_prefix='~', intents = discord.Intents.all(), help_command=None);
 
 @bot.event
@@ -18,6 +22,7 @@ async def on_ready():
         print(f'We have logged as {bot.user}');
         config.botstatus = '✅';
         try:
+            global connection;
             connection = pymysql.connect(
                 host=config.host,
                 port=config.port,
@@ -42,7 +47,7 @@ async def on_member_join(member):
                 user=config.user,
                 password=config.password,
                 database=config.db_name,
-                charset='utf8',
+                charset=config.charset,
                 cursorclass=pymysql.cursors.DictCursor
             );
         user = str(member.name) + '#' + str(member.discriminator);
@@ -189,7 +194,7 @@ async def addtoblackhole(ctx, *, arg):
                 user=config.user,
                 password=config.password,
                 database=config.db_name,
-                charset='utf8',
+                charset=config.charset,
                 cursorclass=pymysql.cursors.DictCursor
             );
         with connection.cursor() as cursor:
@@ -228,7 +233,7 @@ async def deletefromblackhole(ctx, *, arg):
                 user=config.user,
                 password=config.password,
                 database=config.db_name,
-                charset='utf8',
+                charset=config.charset,
                 cursorclass=pymysql.cursors.DictCursor
             );
     try:
