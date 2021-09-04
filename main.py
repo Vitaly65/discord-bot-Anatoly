@@ -6,11 +6,11 @@ import config;
 import requests;
 from bs4 import BeautifulSoup as BS;
 import pymysql;
-import datetime
+import datetime;
+import wikipedia;
 
 #парсинг
 #интеграция с wiki
-#сделать что-то с 'connection'
 
 bot = commands.Bot(command_prefix='~', intents = discord.Intents.all(), help_command=None);
 
@@ -21,6 +21,7 @@ async def on_ready():
         creator = await bot.fetch_user(318720256795344896);
         print(f'We have logged as {bot.user}');
         config.botstatus = '✅';
+        wikipedia.set_lang("ru");
         try:
             global connection;
             connection = pymysql.connect(
@@ -289,6 +290,7 @@ async def help(ctx):
         emb.add_field(name=f"~addtoblackhole (user login)", value='Добавить человека в black hole', inline=False);
         emb.add_field(name=f"~deletefromblackhole (user login or 'all')", value='Удалить человека из/полностью очистить black hole', inline=False);
         emb.add_field(name=f"~info (@login)", value='Собрать самое полное досье на человека', inline=False);
+        emb.add_field(name=f"~search (аргумент)", value='Задать вопрос Вассерману', inline=False);
         emb.set_author(name=f"Информацию предоставил: {bot.user}", icon_url=bot.user.avatar_url);
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
         await ctx.channel.send(embed = emb);
@@ -324,5 +326,24 @@ async def info(ctx, *, member: discord.Member):
         emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url);
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
         await bot.get_channel(config.CHANNEL).send(embed = emb);
+
+@bot.command(pass_context= True)
+async def search(ctx, *, arg):
+    try:
+        answer = str(wikipedia.summary(f"{arg}", sentences=5));
+        answer_url = str(wikipedia.page(f"{arg}").url);
+        emb = discord.Embed(title='Ответ Вассермана:', value='\u200b', color=0x008000);
+        emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url);
+        emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
+        emb.add_field(name='\u200b', value=f"{answer}", inline=False);
+        emb.set_thumbnail(url = wikipedia.page(f"{arg}").images[1]);
+        emb.add_field(name='\u200b', value=f"{answer_url}", inline=False);
+        await ctx.channel.send(embed = emb);
+    except:
+        emb = discord.Embed(title='Ответ Вассермана:', value='\u200b', color=0x008000);
+        emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url);
+        emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
+        emb.add_field(name='\u200b', value=f"Ничего не найдено :(", inline=False);
+        await ctx.channel.send(embed = emb);
 
 bot.run(config.TOKEN);
