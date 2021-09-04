@@ -5,7 +5,8 @@ from discord import utils;
 import config;
 import requests;
 from bs4 import BeautifulSoup as BS;
-import pymysql; 
+import pymysql;
+import datetime
 
 bot = commands.Bot(command_prefix='~', intents = discord.Intents.all(), help_command=None);
 
@@ -19,7 +20,7 @@ async def on_ready():
         try:
             connection = pymysql.connect(
                 host=config.host,
-                port=3306,
+                port=config.port,
                 user=config.user,
                 password=config.password,
                 database=config.db_name,
@@ -37,7 +38,7 @@ async def on_member_join(member):
     try:
         connection = pymysql.connect(
                 host=config.host,
-                port=3306,
+                port=config.port,
                 user=config.user,
                 password=config.password,
                 database=config.db_name,
@@ -87,7 +88,7 @@ async def on_member_join(member):
                         break;
     except:
         emb = discord.Embed(title=f'Fatal error', value='\u200b', color=0xff0000);
-        emb.set_author(name=f"{bot.user}8", icon_url=bot.user.avatar_url);
+        emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url);
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
         await bot.get_channel(config.CHANNEL).send(embed = emb);
 
@@ -118,16 +119,22 @@ async def on_command_error(ctx, error):
     emb = discord.Embed(title=f'{error}', value='\u200b', color=0xff0000);
     await bot.get_channel(config.CHANNEL).send(embed = emb);
 
+@bot.event
+async def on_raw_reaction_add(payload):
+    if payload.message.id == 870438016341147718 and payload.emoji.name == "😀":
+        role = discord.utils.get(payload.guild.roles, name="Главный врач")
+        await payload.author.add_roles(role)
+
 @bot.command(pass_context= True)
 async def blackhole(ctx):
     try:
         connection = pymysql.connect(
                 host=config.host,
-                port=3306,
+                port=config.port,
                 user=config.user,
                 password=config.password,
                 database=config.db_name,
-                charset='utf8',
+                charset=config.charset,
                 cursorclass=pymysql.cursors.DictCursor
             );
         with connection:
@@ -178,7 +185,7 @@ async def addtoblackhole(ctx, *, arg):
     try:
         connection = pymysql.connect(
                 host=config.host,
-                port=3306,
+                port=config.port,
                 user=config.user,
                 password=config.password,
                 database=config.db_name,
@@ -217,7 +224,7 @@ async def addtoblackhole(ctx, *, arg):
 async def deletefromblackhole(ctx, *, arg):
     connection = pymysql.connect(
                 host=config.host,
-                port=3306,
+                port=config.port,
                 user=config.user,
                 password=config.password,
                 database=config.db_name,
@@ -276,6 +283,7 @@ async def help(ctx):
         emb.add_field(name=f"~blackhole", value='Заглянуть в black hole', inline=False);
         emb.add_field(name=f"~addtoblackhole (user login)", value='Добавить человека в black hole', inline=False);
         emb.add_field(name=f"~deletefromblackhole (user login or 'all')", value='Удалить человека из/полностью очистить black hole', inline=False);
+        emb.add_field(name=f"~info (@login)", value='Собрать самое полное досье на человека', inline=False);
         emb.set_author(name=f"Информацию предоставил: {bot.user}", icon_url=bot.user.avatar_url);
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
         await ctx.channel.send(embed = emb);
@@ -284,11 +292,32 @@ async def help(ctx):
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
         await ctx.channel.send(embed = emb);
 
-def parse():
-    r = requests.get('https://stopgame.ru/review/new/izumitelno/p1');
-    html = BS(r.content, 'html.parser');
-    for i in html.select(".items > .article-summary"):
-        title = i.select('.caption > a');
-        print (title[0].text);
+@bot.command(pass_context= True)
+async def info(ctx, *, member: discord.Member):
+    try:
+        date = datetime.datetime.today()
+        emb = discord.Embed(title='Досье:', value='\u200b', color=0x008000);
+        emb.add_field(name=f"Имя:", value=member.name, inline=True);
+        emb.add_field(name=f"Псевдоним:", value=member.display_name, inline=True);
+        emb.add_field(name=f"Идентификатор:", value=member.discriminator, inline=True);
+        emb.set_thumbnail(url=member.avatar_url);
+        emb.add_field(name=f"ID:", value=member.id, inline=False);
+        emb.add_field(name=f"Статус:", value=member.status, inline=True);
+        emb.add_field(name=f"Подробнее:", value=member.activity, inline=True);
+        roles = member.roles;
+        rowRoles = '';
+        for i in roles:
+            rowRoles = rowRoles + str(i) + ' ';
+        emb.add_field(name=f"Роли:", value=rowRoles, inline=False);
+        emb.add_field(name=f"Дата появления:", value=member.joined_at.strftime("%d-%m-%Y %H:%M:%S"), inline=True);
+        emb.add_field(name=f"Дата составления досье:", value=date.strftime('%d-%m-%Y'), inline=True);
+        emb.set_author(name=f"Досье составил: {bot.user}", icon_url=bot.user.avatar_url);
+        emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
+        await bot.get_channel(config.CHANNEL).send(embed = emb);
+    except:
+        emb = discord.Embed(title='Ошибка составления', value='\u200b', color=0x008000);
+        emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url);
+        emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
+        await bot.get_channel(config.CHANNEL).send(embed = emb);
 
 bot.run(config.TOKEN);
