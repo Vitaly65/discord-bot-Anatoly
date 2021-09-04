@@ -109,12 +109,6 @@ async def on_command_error(ctx, error):
     emb = discord.Embed(title=f'{error}', value='\u200b', color=0xff0000);
     await bot.get_channel(config.CHANNEL).send(embed = emb);
 
-@bot.event
-async def on_raw_reaction_add(payload):
-    if payload.message.id == 870438016341147718 and payload.emoji.name == "😀":
-        role = discord.utils.get(payload.guild.roles, name="Главный врач")
-        await payload.author.add_roles(role)
-
 @bot.command(pass_context= True)
 async def blackhole(ctx):
     try:
@@ -349,7 +343,6 @@ async def parser_cbr():
     text = [];
     for quote in quotes:
         text.append(quote.text);
-    print(text);
     return text;
 
 async def connectsql():
