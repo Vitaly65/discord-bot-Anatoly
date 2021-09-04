@@ -345,6 +345,5 @@ async def search(ctx, *, arg):
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
         emb.add_field(name='\u200b', value=f"Ничего не найдено :(", inline=False);
         await ctx.channel.send(embed = emb);
-        
 
 bot.run(config.TOKEN);
