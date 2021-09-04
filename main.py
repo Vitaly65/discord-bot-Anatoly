@@ -1,13 +1,8 @@
-import discord;
+import discord, config, requests, datetime, wikipedia, pymysql;
 from discord import flags;
 from discord.ext import commands;
 from discord import utils;
-import config;
-import requests;
 from bs4 import BeautifulSoup;
-import pymysql;
-import datetime;
-import wikipedia;
 
 bot = commands.Bot(command_prefix='~', intents = discord.Intents.all(), help_command=None);
 
