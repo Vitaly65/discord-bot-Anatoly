@@ -4,7 +4,7 @@ from discord.ext import commands;
 from discord import utils;
 import config;
 import requests;
-from bs4 import BeautifulSoup as BS;
+from bs4 import BeautifulSoup;
 import pymysql;
 import datetime;
 import wikipedia;
@@ -22,6 +22,10 @@ async def on_ready():
         print(f'We have logged as {bot.user}');
         config.botstatus = '✅';
         wikipedia.set_lang("ru");
+        global date;
+        global yesterday;
+        date = datetime.datetime.today();
+        yesterday = datetime.datetime.today() - datetime.timedelta(days = 1);
         try:
             global connection;
             connection = pymysql.connect(
@@ -291,6 +295,8 @@ async def help(ctx):
         emb.add_field(name=f"~deletefromblackhole (user login or 'all')", value='Удалить человека из/полностью очистить black hole', inline=False);
         emb.add_field(name=f"~info (@login)", value='Собрать самое полное досье на человека', inline=False);
         emb.add_field(name=f"~search (аргумент)", value='Задать вопрос Вассерману', inline=False);
+        emb.add_field(name=f"~USD", value='Узнать курс доллара', inline=False);
+        emb.add_field(name=f"~EUR", value='Узнать курс евро', inline=False);
         emb.set_author(name=f"Информацию предоставил: {bot.user}", icon_url=bot.user.avatar_url);
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
         await ctx.channel.send(embed = emb);
@@ -302,7 +308,6 @@ async def help(ctx):
 @bot.command(pass_context= True)
 async def info(ctx, *, member: discord.Member):
     try:
-        date = datetime.datetime.today()
         emb = discord.Embed(title='Досье:', value='\u200b', color=0x008000);
         emb.add_field(name=f"Имя:", value=member.name, inline=True);
         emb.add_field(name=f"Псевдоним:", value=member.display_name, inline=True);
@@ -344,6 +349,52 @@ async def search(ctx, *, arg):
         emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url);
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
         emb.add_field(name='\u200b', value=f"Ничего не найдено :(", inline=False);
+        await ctx.channel.send(embed = emb);
+
+@bot.command(pass_context= True)
+async def USD(ctx):
+    try:
+        url = 'https://cbr.ru/';
+        response = requests.get(url);
+        soup = BeautifulSoup(response.text, 'lxml');
+        quotes = soup.find_all('div', class_='col-xs-9');
+        text = [];
+        for quote in quotes:
+            text.append(quote.text);
+        emb = discord.Embed(title='Курс доллара(by cbr.ru):', value='\u200b', color=0x008000);
+        emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url);
+        emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
+        emb.add_field(name=yesterday.strftime('%d-%m-%Y'), value=f"{text[1]}", inline=False);
+        emb.add_field(name=date.strftime('%d-%m-%Y'), value=f"{text[2]}", inline=False);
+        await ctx.channel.send(embed = emb);
+    except:
+        emb = discord.Embed(title='Error', value='\u200b', color=0x008000);
+        emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url);
+        emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
+        emb.add_field(name=f"cbr.ru не отвечает", value='\u200b', inline=False);
+        await ctx.channel.send(embed = emb);
+
+@bot.command(pass_context= True)
+async def EUR(ctx):
+    try:
+        url = 'https://cbr.ru/';
+        response = requests.get(url);
+        soup = BeautifulSoup(response.text, 'lxml');
+        quotes = soup.find_all('div', class_='col-xs-9');
+        text = [];
+        for quote in quotes:
+            text.append(quote.text);
+        emb = discord.Embed(title='Курс евро(by cbr.ru):', value='\u200b', color=0x008000);
+        emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url);
+        emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
+        emb.add_field(name=yesterday.strftime('%d-%m-%Y'), value=f"{text[4]}", inline=False);
+        emb.add_field(name=date.strftime('%d-%m-%Y'), value=f"{text[5]}", inline=False);
+        await ctx.channel.send(embed = emb);
+    except:
+        emb = discord.Embed(title='Error', value='\u200b', color=0x008000);
+        emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url);
+        emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url);
+        emb.add_field(name=f"cbr.ru не отвечает", value='\u200b', inline=False);
         await ctx.channel.send(embed = emb);
 
 bot.run(config.TOKEN);
