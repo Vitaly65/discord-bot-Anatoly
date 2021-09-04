@@ -6,11 +6,7 @@ import config;
 import requests;
 from bs4 import BeautifulSoup as BS;
 import pymysql;
-import datetime
-
-#парсинг
-#интеграция с wiki
-#сделать что-то с 'connection'
+import datetime;
 
 bot = commands.Bot(command_prefix='~', intents = discord.Intents.all(), help_command=None);
 
