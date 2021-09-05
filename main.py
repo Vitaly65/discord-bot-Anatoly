@@ -366,7 +366,7 @@ async def connectsql():
 @bot.command(pass_context= True)
 async def flood(ctx):
     try:
-        i = 0;
+        i = 6;
         while i > 0:
             if i > 50:
                 while i > 1:
@@ -375,6 +375,6 @@ async def flood(ctx):
             await ctx.channel.send('-'*i);
             i += 1;
     except:
-        print('-_-');
+        print('АШИБКА АШИБКА АШИБКА АШИБКА11111111111');
 
 bot.run(config.TOKEN);
