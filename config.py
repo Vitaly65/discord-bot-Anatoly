@@ -9,4 +9,4 @@ user = 'sql11434537';
 password = 'nDQtaDIatU';
 db_name = 'sql11434537';
 port = 3306;
-charset='utf8';
+charset ='utf8';

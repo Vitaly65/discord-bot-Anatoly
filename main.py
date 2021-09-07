@@ -1,5 +1,5 @@
 import discord, config, requests, datetime, wikipedia, pymysql;
-from discord import flags, utils;
+from discord import utils;
 from discord.ext import commands;
 from bs4 import BeautifulSoup;
 
