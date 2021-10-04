@@ -97,7 +97,13 @@ async def on_command_error(ctx, error):
     print(f'Ошибка при выполнении команды: {error}')
     er = str(error)
     if er == 'arg is a required argument that is missing.':
-        emb = discord.Embed(title=f'Мне нужен его логин, тысяча чертей!', value='\u200b', color=0xff0000)
+        emb = discord.Embed(title=f'Нужен минимум один аргумент, тысяча чертей!', value='\u200b', color=0xff0000)
+        emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+        emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+        await bot.get_channel(config.CHANNEL).send(embed=emb)
+        return
+    if er == 'arg1 is a required argument that is missing.':
+        emb = discord.Embed(title=f'Нужен минимум один аргумент, тысяча чертей!', value='\u200b', color=0xff0000)
         emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
         await bot.get_channel(config.CHANNEL).send(embed=emb)
@@ -360,6 +366,7 @@ async def EUR(ctx):
 async def random(ctx, arg1, arg2, arg3=None, arg4=None, arg5=None, arg6=None):
     try:
         count = 2
+        user = None
         if arg3 is not None:
             count += 1
         if arg4 is not None:
