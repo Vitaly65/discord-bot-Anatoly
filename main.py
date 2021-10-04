@@ -2,6 +2,7 @@ import discord, config, requests, datetime, wikipedia, pymysql
 from discord import utils
 from discord.ext import commands
 from bs4 import BeautifulSoup
+from random import randint
 
 bot = commands.Bot(command_prefix='~', intents=discord.Intents.all(), help_command=None)
 
@@ -24,7 +25,6 @@ async def on_ready():
             print('SQL error')
     except:
         print('Fatal error')
-
 
 @bot.event
 async def on_member_join(member):
@@ -78,7 +78,6 @@ async def on_member_join(member):
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
         await bot.get_channel(config.CHANNEL).send(embed=emb)
 
-
 @bot.event
 async def on_member_remove(member):
     try:
@@ -93,13 +92,18 @@ async def on_member_remove(member):
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
         await bot.get_channel(config.CHANNEL).send(embed=emb)
 
-
 @bot.event
 async def on_command_error(ctx, error):
     print(f'Ошибка при выполнении команды: {error}')
     er = str(error)
     if er == 'arg is a required argument that is missing.':
         emb = discord.Embed(title=f'Мне нужен его логин, тысяча чертей!', value='\u200b', color=0xff0000)
+        emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+        emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+        await bot.get_channel(config.CHANNEL).send(embed=emb)
+        return
+    if er == 'arg2 is a required argument that is missing.':
+        emb = discord.Embed(title=f'Выбор без выбора, тысяча чертей!', value='\u200b', color=0xff0000)
         emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
         await bot.get_channel(config.CHANNEL).send(embed=emb)
@@ -119,7 +123,6 @@ async def on_command_error(ctx, error):
         return
     emb = discord.Embed(title=f'{error}', value='\u200b', color=0xff0000)
     await bot.get_channel(config.CHANNEL).send(embed=emb)
-
 
 @bot.command(pass_context=True)
 async def blackhole(ctx):
@@ -152,7 +155,6 @@ async def blackhole(ctx):
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
         await ctx.channel.send(embed=emb)
 
-
 @bot.command(pass_context=True)
 async def status(ctx):
     try:
@@ -169,7 +171,6 @@ async def status(ctx):
         emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
         await ctx.channel.send(embed=emb)
-
 
 @bot.command(pass_context=True)
 async def addtoblackhole(ctx, *, arg):
@@ -203,7 +204,6 @@ async def addtoblackhole(ctx, *, arg):
         emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
         await ctx.channel.send(embed=emb)
-
 
 @bot.command(pass_context=True)
 async def deletefromblackhole(ctx, *, arg):
@@ -254,7 +254,6 @@ async def deletefromblackhole(ctx, *, arg):
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
         await ctx.channel.send(embed=emb)
 
-
 @bot.command(pass_context=True)
 async def help(ctx):
     try:
@@ -268,6 +267,7 @@ async def help(ctx):
         emb.add_field(name=f"~search (аргумент)", value='Задать вопрос Вассерману', inline=False)
         emb.add_field(name=f"~USD", value='Узнать курс доллара', inline=False)
         emb.add_field(name=f"~EUR", value='Узнать курс евро', inline=False)
+        emb.add_field(name=f"~random", value='Вассерман сделает выбор за вас', inline=False)
         emb.set_author(name=f"Информацию предоставил: {bot.user}", icon_url=bot.user.avatar_url)
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
         await ctx.channel.send(embed=emb)
@@ -275,7 +275,6 @@ async def help(ctx):
         emb = discord.Embed(title=f'Ошибка выполнения команды help', value='\u200b', color=0xff0000)
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
         await ctx.channel.send(embed=emb)
-
 
 @bot.command(pass_context=True)
 async def info(ctx, *, member: discord.Member):
@@ -304,7 +303,6 @@ async def info(ctx, *, member: discord.Member):
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
         await bot.get_channel(config.CHANNEL).send(embed=emb)
 
-
 @bot.command(pass_context=True)
 async def search(ctx, *, arg):
     try:
@@ -324,7 +322,6 @@ async def search(ctx, *, arg):
         emb.add_field(name='\u200b', value=f"Ничего не найдено :(", inline=False)
         await ctx.channel.send(embed=emb)
 
-
 @bot.command(pass_context=True)
 async def USD(ctx):
     try:
@@ -341,7 +338,6 @@ async def USD(ctx):
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
         emb.add_field(name=f"cbr.ru не отвечает", value='\u200b', inline=False)
         await ctx.channel.send(embed=emb)
-
 
 @bot.command(pass_context=True)
 async def EUR(ctx):
@@ -360,6 +356,25 @@ async def EUR(ctx):
         emb.add_field(name=f"cbr.ru не отвечает", value='\u200b', inline=False)
         await ctx.channel.send(embed=emb)
 
+@bot.command(pass_context=True)
+async def random(ctx, arg1, arg2):
+    try:
+        rand = randint(1, 2)
+        if rand == 1:
+            user = arg1
+        else:
+            user = arg2
+        emb = discord.Embed(title='Решение Вассермана', value='\u200b', color=0x00FBF0)
+        emb.add_field(name=f"{user}", value='\u200b', inline=False)
+        emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+        emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+        await ctx.channel.send(embed=emb)
+    except:
+        emb = discord.Embed(title='Error', value='\u200b', color=0x008000)
+        emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+        emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+        emb.add_field(name=f"Что-то сломалось", value='\u200b', inline=False)
+        await ctx.channel.send(embed=emb)
 
 async def parser_cbr():
     url = 'https://cbr.ru/'
@@ -370,7 +385,6 @@ async def parser_cbr():
     for quote in quotes:
         text.append(quote.text)
     return text
-
 
 async def connectsql():
     connection = pymysql.connect(
@@ -383,21 +397,5 @@ async def connectsql():
         cursorclass=pymysql.cursors.DictCursor
     )
     return connection
-
-
-@bot.command(pass_context=True)
-async def flood(ctx):
-    try:
-        i = 6
-        while i > 0:
-            if i > 50:
-                while i > 1:
-                    await ctx.channel.send('-' * i)
-                    i -= 1
-            await ctx.channel.send('-' * i)
-            i += 1
-    except:
-        print('АШИБКА АШИБКА АШИБКА АШИБКА11111111111')
-
 
 bot.run(config.TOKEN)
