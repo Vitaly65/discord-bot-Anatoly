@@ -264,10 +264,10 @@ async def help(ctx):
         emb.add_field(name=f"~deletefromblackhole (user login or 'all')",
                       value='Удалить человека из/полностью очистить black hole', inline=False)
         emb.add_field(name=f"~info (@login)", value='Собрать самое полное досье на человека', inline=False)
-        emb.add_field(name=f"~search (аргумент)", value='Задать вопрос Вассерману', inline=False)
+        emb.add_field(name=f"~search (вопрос)", value='Задать вопрос Вассерману', inline=False)
         emb.add_field(name=f"~USD", value='Узнать курс доллара', inline=False)
         emb.add_field(name=f"~EUR", value='Узнать курс евро', inline=False)
-        emb.add_field(name=f"~random", value='Вассерман сделает выбор за вас', inline=False)
+        emb.add_field(name=f"~random", value='Вассерман сделает выбор за вас (до шести вариантов)', inline=False)
         emb.set_author(name=f"Информацию предоставил: {bot.user}", icon_url=bot.user.avatar_url)
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
         await ctx.channel.send(embed=emb)
@@ -357,13 +357,30 @@ async def EUR(ctx):
         await ctx.channel.send(embed=emb)
 
 @bot.command(pass_context=True)
-async def random(ctx, arg1, arg2):
+async def random(ctx, arg1, arg2, arg3=None, arg4=None, arg5=None, arg6=None):
     try:
-        rand = randint(1, 2)
+        count = 2
+        if arg3 is not None:
+            count += 1
+        if arg4 is not None:
+            count += 1
+        if arg5 is not None:
+            count += 1
+        if arg6 is not None:
+            count += 1
+        rand = randint(1, count)
         if rand == 1:
             user = arg1
-        else:
+        if rand == 2:
             user = arg2
+        if rand == 3:
+            user = arg3
+        if rand == 4:
+            user = arg4
+        if rand == 5:
+            user = arg5
+        if rand == 6:
+            user = arg6
         emb = discord.Embed(title='Решение Вассермана', value='\u200b', color=0x00FBF0)
         emb.add_field(name=f"{user}", value='\u200b', inline=False)
         emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
