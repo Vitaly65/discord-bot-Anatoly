@@ -93,24 +93,46 @@ async def on_member_remove(member):
         await bot.get_channel(config.CHANNEL).send(embed=emb)
 
 @bot.event
+async def on_message(message):
+    try:
+        connection = await connectsql()
+        author = message.author.name + '#' + message.author.discriminator
+        with connection:
+            cur = connection.cursor()
+            insert_query = "SELECT * FROM mute"
+            cur.execute(insert_query)
+            rows = cur.fetchall()
+            if rows != ():
+                for i in rows:
+                    if i['login'] == author:
+                        await message.delete()
+                        break
+        await bot.process_commands(message)
+    except:
+        await bot.process_commands(message)
+
+@bot.event
 async def on_command_error(ctx, exception):
     message = await ctx.fetch_message(ctx.message.id)
-    message = message.content.partition(' ')
+    message_text = message.content.partition(' ')
+    await message.delete()
     print(f'Ошибка выполнения команды.', type(exception), exception)
     if isinstance(exception, discord.ext.commands.errors.MissingRequiredArgument):
-        emb = discord.Embed(title=f'{ctx.message.author.nick}, неверный синтаксис команды {message[0]}, тысяча чертей!', value='\u200b', color=0xff0000)
+        emb = discord.Embed(title=f'{ctx.message.author.nick}, неверный синтаксис команды {message_text[0]}', value='\u200b', color=0xff0000)
         emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
-        await ctx.channel.send(embed=emb)
+        await ctx.channel.send(embed=emb, delete_after = 3)
         return
     if isinstance(exception, discord.ext.commands.errors.CommandNotFound):
-        emb = discord.Embed(title=f'{ctx.message.author.nick}, команда {message[0]} не найдена, используй ~help', value='\u200b', color=0xff0000)
+        emb = discord.Embed(title=f'{ctx.message.author.nick}, команда {message_text[0]} не найдена, используй ~help', value='\u200b', color=0xff0000)
         emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
-        await ctx.channel.send(embed=emb)
+        await ctx.channel.send(embed=emb, delete_after = 3)
         return
-    emb = discord.Embed(title=f'fatal error', value='\u200b', color=0xff0000)
-    await bot.get_channel(config.CHANNEL).send(embed=emb)
+    emb = discord.Embed(title=f'Fatal error', value='\u200b', color=0xff0000)
+    emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+    emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+    await bot.get_channel(config.CHANNEL).send(embed=emb, delete_after = 3)
 
 @bot.command(pass_context=True)
 async def blackhole(ctx):
@@ -144,6 +166,115 @@ async def blackhole(ctx):
         await ctx.channel.send(embed=emb)
 
 @bot.command(pass_context=True)
+async def admins(ctx):
+    try:
+        connection = await connectsql()
+        with connection:
+            cur = connection.cursor()
+            insert_query = "SELECT * FROM admins"
+            cur.execute(insert_query)
+            rows = cur.fetchall()
+            if rows != ():
+                emb = discord.Embed(title=f"Admins:", value='\u200b', color=0xff0000)
+                emb.add_field(name=f'Всего записей: {len(rows)}', value='\u200b', inline=False)
+                count = 1
+                for i in rows:
+                    a = i['login']
+                    emb.add_field(name=f'{count}. {a}', value='\u200b', inline=False)
+                    count += 1
+                emb.set_author(name=f"Список предоставил: {bot.user}", icon_url=bot.user.avatar_url)
+                emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+                await ctx.channel.send(embed=emb)
+            else:
+                emb = discord.Embed(title=f"Пусто..", value='\u200b', color=0xff0000)
+                emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+                emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+                await ctx.channel.send(embed=emb)
+    except:
+        emb = discord.Embed(title=f'Fatal error', value='\u200b', color=0xff0000)
+        emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+        emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+        await ctx.channel.send(embed=emb)
+
+@bot.command(pass_context=True)
+async def addadmin(ctx, *, arg):
+    try:
+        if ctx.message.author.id == 318720256795344896:
+            connection = await connectsql()
+            with connection.cursor() as cursor:
+                cur = connection.cursor()
+                insert_query = "SELECT * FROM admins"
+                cur.execute(insert_query)
+                rows = cur.fetchall()
+                if rows != ():
+                    for i in rows:
+                        a = i['login']
+                        if a == arg:
+                            emb = discord.Embed(title=f'Уже админ ._.', value='\u200b',
+                                                color=0xff0000)
+                            emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+                            emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+                            await ctx.channel.send(embed=emb)
+                            return
+                insert_query = f"INSERT INTO admins (login) VALUES ('{arg}');"
+                cursor.execute(insert_query)
+                connection.commit()
+                emb = discord.Embed(title=f'{arg} успешно добавлен в admins', value='\u200b', color=0x00FF00)
+                emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+                emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+                await ctx.channel.send(embed=emb)
+        else:
+            emb = discord.Embed(title='Ошибка', value='\u200b', color=0x008000)
+            emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+            emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+            emb.add_field(name=f"Недостаточно прав", value='\u200b', inline=False)
+            await ctx.channel.send(embed=emb)
+    except:
+        pass
+
+@bot.command(pass_context=True)
+async def deleteadmin(ctx, *, arg):
+    try:
+        if ctx.message.author.id == 318720256795344896:
+            connection = await connectsql()
+            with connection.cursor() as cursor:
+                insert_query = f"SELECT * FROM admins"
+                cursor.execute(insert_query)
+                rows = cursor.fetchall()
+                if rows != ():
+                    arg = str(arg)
+                    for i in rows:
+                        user = i['login']
+                        if user == arg:
+                            insert_query = f"DELETE FROM admins WHERE login = ('{arg}');"
+                            cursor.execute(insert_query)
+                            connection.commit()
+                            emb = discord.Embed(title=f'{arg} успешно удален из admins', value='\u200b',
+                                                color=0x00FF00)
+                            emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+                            emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+                            await ctx.channel.send(embed=emb)
+                        else:
+                            emb = discord.Embed(title=f'Данный пользователь не найден в admins', value='\u200b',
+                                                color=0xff0000)
+                            emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+                            emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+                            await ctx.channel.send(embed=emb)
+                else:
+                    emb = discord.Embed(title=f"Там уже пусто!", value='\u200b', color=0xff0000)
+                    emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+                    emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+                    await ctx.channel.send(embed=emb)
+        else:
+            emb = discord.Embed(title='Ошибка', value='\u200b', color=0x008000)
+            emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+            emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+            emb.add_field(name=f"Недостаточно прав", value='\u200b', inline=False)
+            await ctx.channel.send(embed=emb)
+    except:
+        pass
+
+@bot.command(pass_context=True)
 async def status(ctx):
     try:
         emb = discord.Embed(title='Status', value='\u200b', color=0x00FBF0)
@@ -167,27 +298,33 @@ async def addtoblackhole(ctx, *, arg):
     try:
         connection = await connectsql()
         with connection.cursor() as cursor:
-            cur = connection.cursor()
-            insert_query = "SELECT * FROM blacklist"
-            cur.execute(insert_query)
-            rows = cur.fetchall()
+            insert_query = f"SELECT * FROM admins"
+            cursor.execute(insert_query)
+            rows = cursor.fetchall()
             if rows != ():
+                arg = str(arg)
                 for i in rows:
-                    a = i['login']
-                    if a == arg:
-                        emb = discord.Embed(title=f'Ага, держи карман шире, он там уже есть', value='\u200b',
+                    user = i['login']
+                    if user == arg:
+                        insert_query = f"DELETE FROM admins WHERE login = ('{arg}');"
+                        cursor.execute(insert_query)
+                        connection.commit()
+                        emb = discord.Embed(title=f'{arg} успешно удален из admins', value='\u200b',
+                                            color=0x00FF00)
+                        emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+                        emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+                        await ctx.channel.send(embed=emb)
+                    else:
+                        emb = discord.Embed(title=f'Данный пользователь не найден в admins', value='\u200b',
                                             color=0xff0000)
                         emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
                         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
                         await ctx.channel.send(embed=emb)
-                        return
-            insert_query = f"INSERT INTO blacklist (login) VALUES ('{arg}');"
-            cursor.execute(insert_query)
-            connection.commit()
-            emb = discord.Embed(title=f'{arg} успешно добавлен в black hole', value='\u200b', color=0x00FF00)
-            emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
-            emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
-            await ctx.channel.send(embed=emb)
+            else:
+                emb = discord.Embed(title=f"Там пусто уже", value='\u200b', color=0xff0000)
+                emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+                emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+                await ctx.channel.send(embed=emb)
     except:
         print('Ошибка выполнения команды addtoblackhole')
         emb = discord.Embed(title=f'Fatal error', value='\u200b', color=0xff0000)
@@ -256,6 +393,9 @@ async def help(ctx):
         emb.add_field(name=f"~info (@login)", value='Собрать самое полное досье на человека', inline=False)
         emb.add_field(name=f"~search (вопрос)", value='Задать вопрос Вассерману', inline=False)
         emb.add_field(name=f"~USD", value='Узнать курс доллара', inline=False)
+        emb.add_field(name=f"~mute", value='Список пользователей с выключенным чатом', inline=False)
+        emb.add_field(name=f"~muteadd (@login)", value='Выключить чат пользователю', inline=False)
+        emb.add_field(name=f"~unmute (@login)", value='Включить чат пользователю', inline=False)
         emb.add_field(name=f"~EUR", value='Узнать курс евро', inline=False)
         emb.add_field(name=f"~random", value='Вассерман сделает выбор за вас (до шести вариантов)', inline=False)
         emb.set_author(name=f"Информацию предоставил: {bot.user}", icon_url=bot.user.avatar_url)
@@ -383,6 +523,124 @@ async def random(ctx, arg1, arg2, arg3=None, arg4=None, arg5=None, arg6=None):
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
         emb.add_field(name=f"Что-то сломалось", value='\u200b', inline=False)
         await ctx.channel.send(embed=emb)
+
+@bot.command(pass_context=True)
+async def mute(ctx):
+    try:
+        connection = await connectsql()
+        with connection:
+            cur = connection.cursor()
+            insert_query = "SELECT * FROM mute"
+            cur.execute(insert_query)
+            rows = cur.fetchall()
+            if rows != ():
+                emb = discord.Embed(title=f"Список пользователей с выключеным чатом:", value='\u200b', color=0xff0000)
+                emb.add_field(name=f'Всего записей: {len(rows)}', value='\u200b', inline=False)
+                count = 1
+                for i in rows:
+                    a = i['login']
+                    emb.add_field(name=f'{count}. {a}', value='\u200b', inline=False)
+                    count += 1
+                emb.set_author(name=f"Список предоставлен: {bot.user}", icon_url=bot.user.avatar_url)
+                emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+                await ctx.channel.send(embed=emb)
+            else:
+                emb = discord.Embed(title=f"У всех включен чат", value='\u200b', color=0xff0000)
+                emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+                emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+                await ctx.channel.send(embed=emb)
+    except:
+        pass
+
+@bot.command(pass_context=True)
+async def muteadd(ctx, arg):
+    try:
+        if ctx.message.author.id == 318720256795344896:
+            connection = await connectsql()
+            with connection.cursor() as cursor:
+                cur = connection.cursor()
+                insert_query = "SELECT * FROM mute"
+                cur.execute(insert_query)
+                rows = cur.fetchall()
+                if rows != ():
+                    for i in rows:
+                        a = i['login']
+                        if a == arg:
+                            emb = discord.Embed(title=f'Ага, держи карман шире, он там уже есть', value='\u200b',
+                                                color=0xff0000)
+                            emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+                            emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+                            await ctx.channel.send(embed=emb)
+                            return
+                insert_query = f"INSERT INTO mute (login) VALUES ('{arg}');"
+                cursor.execute(insert_query)
+                connection.commit()
+                emb = discord.Embed(title=f'{arg} успешно добавлен в мут', value='\u200b', color=0x00FF00)
+                emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+                emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+                await ctx.channel.send(embed=emb)
+        else:
+            emb = discord.Embed(title='Ошибка', value='\u200b', color=0x008000)
+            emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+            emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+            emb.add_field(name=f"Недостаточно прав", value='\u200b', inline=False)
+            await ctx.channel.send(embed=emb)
+    except:
+        pass
+
+@bot.command(pass_context=True)
+async def unmute(ctx, arg):
+    connection = await connectsql()
+    try:
+        if ctx.message.author.id == 318720256795344896:
+            with connection.cursor() as cursor:
+                insert_query = f"SELECT * FROM mute"
+                cursor.execute(insert_query)
+                rows = cursor.fetchall()
+                if rows != ():
+                    if arg == 'all':
+                        for i in rows:
+                            user = i['login']
+                            insert_query = f"DELETE FROM mute WHERE login = ('{user}');"
+                            cursor.execute(insert_query)
+                            connection.commit()
+                        emb = discord.Embed(title=f'Список mute был успешно очищен', value='\u200b', color=0x00FF00)
+                        emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+                        emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+                        await ctx.channel.send(embed=emb)
+                    else:
+                        arg = str(arg)
+                        for i in rows:
+                            user = i['login']
+                            if user == arg:
+                                insert_query = f"DELETE FROM mute WHERE login = ('{arg}');"
+                                cursor.execute(insert_query)
+                                connection.commit()
+                                emb = discord.Embed(title=f'{arg} успешно удален из mute', value='\u200b',
+                                                    color=0x00FF00)
+                                emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+                                emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+                                await ctx.channel.send(embed=emb)
+                            else:
+                                emb = discord.Embed(title=f'Данному пользователю не выключен чат', value='\u200b',
+                                                    color=0xff0000)
+                                emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+                                emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+                                await ctx.channel.send(embed=emb)
+                else:
+                    emb = discord.Embed(title=f"Список mute пуст", value='\u200b', color=0xff0000)
+                    emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+                    emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+                    await ctx.channel.send(embed=emb)
+        else:
+            emb = discord.Embed(title='Ошибка', value='\u200b', color=0x008000)
+            emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
+            emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
+            emb.add_field(name=f"Недостаточно прав", value='\u200b', inline=False)
+            await ctx.channel.send(embed=emb)
+
+    except:
+        pass
 
 async def parser_cbr():
     url = 'https://cbr.ru/'

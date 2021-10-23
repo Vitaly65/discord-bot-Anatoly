@@ -4,9 +4,9 @@ ROLE = 801163825097342976
 botstatus = '❌'
 sqlstatus = '❌'
 
-host = 'sql11.freemysqlhosting.net'
-user = 'sql11434537'
-password = 'nDQtaDIatU'
-db_name = 'sql11434537'
+host = 'sql11.freesqldatabase.com'
+user = 'sql11446253'
+password = 'cBvleI6Qfu'
+db_name = 'sql11446253'
 port = 3306
 charset ='utf8'
