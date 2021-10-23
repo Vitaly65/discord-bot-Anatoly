@@ -94,15 +94,17 @@ async def on_member_remove(member):
 
 @bot.event
 async def on_command_error(ctx, exception):
+    message = await ctx.fetch_message(ctx.message.id)
+    message = message.content.partition(' ')
     print(f'Ошибка выполнения команды.', type(exception), exception)
     if isinstance(exception, discord.ext.commands.errors.MissingRequiredArgument):
-        emb = discord.Embed(title=f'Неверный синтаксис команды, тысяча чертей!', value='\u200b', color=0xff0000)
+        emb = discord.Embed(title=f'{ctx.message.author.nick}, неверный синтаксис команды {message[0]}, тысяча чертей!', value='\u200b', color=0xff0000)
         emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
         await ctx.channel.send(embed=emb)
         return
     if isinstance(exception, discord.ext.commands.errors.CommandNotFound):
-        emb = discord.Embed(title=f'Команда не найдена, используй ~help', value='\u200b', color=0xff0000)
+        emb = discord.Embed(title=f'{ctx.message.author.nick}, команда {message[0]} не найдена, используй ~help', value='\u200b', color=0xff0000)
         emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
         await ctx.channel.send(embed=emb)
