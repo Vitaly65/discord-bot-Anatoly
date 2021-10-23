@@ -93,41 +93,21 @@ async def on_member_remove(member):
         await bot.get_channel(config.CHANNEL).send(embed=emb)
 
 @bot.event
-async def on_command_error(ctx, error):
-    print(f'Ошибка при выполнении команды: {error}')
-    er = str(error)
-    if er == 'arg is a required argument that is missing.':
-        emb = discord.Embed(title=f'Нужен минимум один аргумент, тысяча чертей!', value='\u200b', color=0xff0000)
+async def on_command_error(ctx, exception):
+    print(f'Ошибка выполнения команды.', type(exception), exception)
+    if isinstance(exception, discord.ext.commands.errors.MissingRequiredArgument):
+        emb = discord.Embed(title=f'Неверный синтаксис команды, тысяча чертей!', value='\u200b', color=0xff0000)
         emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
-        await bot.get_channel(config.CHANNEL).send(embed=emb)
+        await ctx.channel.send(embed=emb)
         return
-    if er == 'arg1 is a required argument that is missing.':
-        emb = discord.Embed(title=f'Нужен минимум один аргумент, тысяча чертей!', value='\u200b', color=0xff0000)
+    if isinstance(exception, discord.ext.commands.errors.CommandNotFound):
+        emb = discord.Embed(title=f'Команда не найдена, используй ~help', value='\u200b', color=0xff0000)
         emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
-        await bot.get_channel(config.CHANNEL).send(embed=emb)
+        await ctx.channel.send(embed=emb)
         return
-    if er == 'arg2 is a required argument that is missing.':
-        emb = discord.Embed(title=f'Выбор без выбора, тысяча чертей!', value='\u200b', color=0xff0000)
-        emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
-        emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
-        await bot.get_channel(config.CHANNEL).send(embed=emb)
-        return
-    if er == 'member is a required argument that is missing.':
-        emb = discord.Embed(title=f'Мне нужен логин человека для досье, тысяча чертей!', value='\u200b',
-                            color=0xff0000)
-        emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
-        emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
-        await bot.get_channel(config.CHANNEL).send(embed=emb)
-        return
-    if er == 'Command "usd" is not found':
-        emb = discord.Embed(title=f'Такой команды нет, используй ~help', value='\u200b', color=0xff0000)
-        emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
-        emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
-        await bot.get_channel(config.CHANNEL).send(embed=emb)
-        return
-    emb = discord.Embed(title=f'{error}', value='\u200b', color=0xff0000)
+    emb = discord.Embed(title=f'fatal error', value='\u200b', color=0xff0000)
     await bot.get_channel(config.CHANNEL).send(embed=emb)
 
 @bot.command(pass_context=True)
@@ -171,12 +151,14 @@ async def status(ctx):
         emb.set_author(name=f"Информацию предоставил: {bot.user}", icon_url=bot.user.avatar_url)
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
         await ctx.channel.send(embed=emb)
+        await ctx.message.delete()
     except:
         emb = discord.Embed(title=f'Fatal error, status is not working, вся информация в консоли', value='\u200b',
                             color=0xff0000)
         emb.set_author(name=f"{bot.user}", icon_url=bot.user.avatar_url)
         emb.set_footer(text=f"Bot powered by: Vitaly#1605", icon_url=creator.avatar_url)
         await ctx.channel.send(embed=emb)
+        await ctx.message.delete()
 
 @bot.command(pass_context=True)
 async def addtoblackhole(ctx, *, arg):
